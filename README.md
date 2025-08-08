@@ -17,4 +17,8 @@ Kullanıcı ile doğal bir dilde etkileşim kurarak, kişiselleştirilmiş ve ve
 - Google Gemini API  
 - Flask / FastAPI 
 - JSON veri işleme  
-- SQLalchemy ile kullanıcı verisi saklama  
+- SQLalchemy ile kullanıcı verisi saklama
+  
+ EKRAN GÖRÜNTÜSÜ:
+ 
+<img width="417" height="780" alt="Ekran Resmi 2025-08-08 20 17 24" src="https://github.com/user-attachments/assets/58b7d857-2fb0-4cbb-87a1-86945aa7db34" />
