@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kariyer Pusulası</title>
+    <style>
+     /* NİHAİ CSS KODU (Son Rötuşlar Uygulanmış) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600;700&display=swap');
+
+body {
+    font-family: 'SF Pro Display', 'Inter', -apple-system, sans-serif;
+    background-color: #dcdcdc;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#chat-container {
+    width: 100%;
+    max-width: 390px;
+    height: 844px;
+    max-height: 90vh;
+    /* YENİ: İlham alınan resimdeki yumuşak yeşil-mavi gradyan */
+    background: linear-gradient(180deg, hsl(150, 77%, 83%) 0%, #eef3f9 100%);
+    border-radius: 40px;
+    border: 10px solid #1c1c1e;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+#status-bar {
+    padding: 18px 30px 10px 30px;
+    text-align: left;
+}
+#time-display {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1c1c1e;
+}
+
+#chat-header {
+    /* YENİ: Başlığı sola hizalama */
+    padding: 0 1.8rem 1rem 1.8rem; /* Sol padding artırıldı, üst padding kaldırıldı */
+    text-align: left;
+    font-weight: 700;
+    font-size: 1.0 rem; /* Biraz daha belirgin olması için büyütüldü */
+    color: #1c1c1e;
+    /* Artık sınıra gerek yok, temiz bir görünüm için kaldırıldı */
+    /* border-bottom: 1px solid #e5e5ea; */
+}
+
+#chat-box {
+    flex-grow: 1;
+    padding: 1rem 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+.feedback-btn.selected {
+    background-color: #d1e7ff; /* Biraz daha belirgin bir mavi */
+    border-color: #007aff;
+    transform: scale(1.1); /* Seçiliyken de büyük kalsın */
+}
+
+
+.message {
+    display: flex;
+    max-width: 80%;
+}
+
+.message p {
+    padding: 0.7rem 1.1rem;
+    border-radius: 1.2rem;
+    margin: 0;
+    line-height: 1.4;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.bot-message {
+    align-self: flex-start;
+}
+.bot-message p {
+    background-color: #ffffff;
+    color: #1c1c1e;
+    border-top-left-radius: 0.3rem;
+}
+
+/* Kullanıcı mesajları (Çok Hafif Gri ile güncellenmiş) */
+.user-message {
+    align-self: flex-end;
+}
+.user-message p {
+    background-color: #ececec; /* <-- DEĞİŞTİRİLMİŞ HALİ */
+    color: #3e3e41;
+    border-top-right-radius: 0.3rem;
+}
+
+#input-area {
+    display: flex;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem; /* Home indicator'dan biraz ayırmak için */
+}
+#user-input {
+    flex-grow: 1;
+    border: none;
+    background: #ffffff;
+    padding: 0.9rem 1.2rem;
+    border-radius: 1.2rem;
+    outline: none;
+    font-size: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+#home-indicator-area {
+    padding-bottom: 1rem;
+}
+#home-indicator {
+    width: 135px;
+    height: 5px;
+    background-color: #4b4b4b; /* Biraz daha yumuşak bir siyah */
+    border-radius: 100px;
+    margin: 0 auto;
+}
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <!-- (Diğer HTML elementleri: status-bar, chat-header vb. aynı kalacak) -->
+        <div id="status-bar"><span id="time-display"></span></div>
+        <div id="chat-header"><h2>MeslekAtlası</h2></div>
+        <div id="chat-box"></div>
+        <div id="input-area"><input type="text" id="user-input" placeholder="Sohbet edin..."></div>
+        <div id="home-indicator-area"><div id="home-indicator"></div></div>
+    </div>
+
+   <script>
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+
+    function addMessageToBox(sender, text, messageId = null, feedback = 0) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender + '-message');
+        const messageBubble = document.createElement('p');
+        messageBubble.textContent = text;
+        messageDiv.appendChild(messageBubble);
+
+        if (sender === 'bot' && messageId) {
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = 'feedback-buttons';
+            feedbackDiv.dataset.messageId = messageId;
+            feedbackDiv.innerHTML = `
+                <button class="feedback-btn ${feedback === 1 ? 'selected' : ''}" onclick="sendFeedback(this, 1)">👍</button>
+                <button class="feedback-btn ${feedback === -1 ? 'selected' : ''}" onclick="sendFeedback(this, -1)">👎</button>
+            `;
+            messageDiv.appendChild(feedbackDiv);
+        }
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendFeedback(buttonElement, feedbackValue) {
+    // Tıklanan butonun ait olduğu feedback grubunu bul
+    const feedbackDiv = buttonElement.parentElement;
+    const messageId = feedbackDiv.dataset.messageId;
+
+    // Bu gruptaki tüm butonlardan 'selected' class'ını kaldır
+    const buttonsInGroup = feedbackDiv.querySelectorAll('.feedback-btn');
+    buttonsInGroup.forEach(btn => btn.classList.remove('selected'));
+
+    // Sadece tıklanan butona 'selected' class'ını ekle
+    buttonElement.classList.add('selected');
+
+    // Sunucuya isteği gönder (bu kısım zaten doğru çalışıyor)
+    try {
+        await fetch('/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message_id: messageId,
+                feedback_value: feedbackValue
+            })
+        });
+    } catch (error) {
+        console.error('Geri bildirim gönderilemedi:', error);
+        // Hata durumunda seçimi geri alabiliriz
+        buttonElement.classList.remove('selected');
+    }
+}
+
+    async function handleSendMessage() {
+        const messageText = userInput.value.trim();
+        if (messageText === "") return;
+        addMessageToBox('user', messageText);
+        userInput.value = '';
+        addMessageToBox('bot', '...');
+
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: messageText })
+            });
+            const data = await response.json();
+            chatBox.removeChild(chatBox.lastChild);
+            addMessageToBox('bot', data.reply, data.id);
+        } catch (error) {
+            console.error("Mesaj gönderme hatası:", error);
+            addMessageToBox('bot', 'Bir hata oluştu.');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        const timeDisplay = document.getElementById('time-display');
+        function updateTime() {
+            const now = new Date();
+            timeDisplay.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        }
+        updateTime(); setInterval(updateTime, 30000);
+
+        try {
+            const response = await fetch('/get_history', { method: 'POST' });
+            const history = await response.json();
+            chatBox.innerHTML = '';
+            if (history.length > 0) {
+                history.forEach(msg => addMessageToBox(msg.role === 'model' ? 'bot' : 'user', msg.content, msg.id, msg.feedback));
+            } else {
+                addMessageToBox('bot', 'Merhaba! Ben Kariyer Pusulası. Başlamak için, ilgi alanlarını anlatır mısın?');
+            }
+        } catch (error) {
+            console.error("Geçmiş alınamadı:", error);
+        }
+    });
+
+    userInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') handleSendMessage(); });
+</script>
+</body>
+</html>
